@@ -19,13 +19,19 @@ function FileDropZone({ onFileDrop }) {
     <div
       {...getRootProps()}
       style={{
-        border: "1px dashed #ccc",
-        padding: "20px",
+        border: "none",
+        borderRadius: "3px",
+        display: "flex",
+        flexDirection: "column",
         textAlign: "center",
+        justifyContent: "center",
+        height: "200px",
+        width: "30%",
+        boxShadow: "2px 2px 5px 2px rgba(0,0,0,0.4)",
       }}
     >
+      <p>将文件拖入此处，或点击选择文件</p>
       <input {...getInputProps()} />
-      <p>Drag & drop CSV file here, or click to select file</p>
     </div>
   );
 }
