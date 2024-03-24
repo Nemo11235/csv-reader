@@ -2,26 +2,24 @@ import React, { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 
 function FileDropZone({ onFileDrop }) {
-  const sendFile = async () => {
-    try {
-      let result = await axios.post("http://localhost:3001/handleFile");
-    } catch (e) {
-      console.log("处理文件时出现错误", e);
-    }
-  };
-
   const onDrop = useCallback(
     (acceptedFiles) => {
-      // Execute the callback with the dropped file
-      onFileDrop(acceptedFiles[0]);
+      // 如果定义了onFileDrop回调函数，则调用它并传递接收的文件列表
+      onFileDrop("hahaa");
     },
     [onFileDrop]
   );
 
-  const { getRootProps, getInputProps } = useDropzone({
+  const { acceptedFiles, getRootProps, getInputProps } = useDropzone({
     onDrop,
-    accept: ".csv",
   });
+  const files = acceptedFiles.map((file) => (
+    <div>
+      <p>已接收的文件：</p>
+      <p>文件名：{file.name}</p>
+      <p>文件类型：{file.type}</p>
+    </div>
+  ));
 
   return (
     <div
@@ -38,8 +36,9 @@ function FileDropZone({ onFileDrop }) {
         boxShadow: "2px 2px 5px 2px rgba(0,0,0,0.4)",
       }}
     >
-      <p>将文件拖入此处，或点击选择文件</p>
+      <p>将文件拖入此处，或点击此处选择文件</p>
       <input {...getInputProps()} />
+      {acceptedFiles && <p>{files}</p>}
     </div>
   );
 }
