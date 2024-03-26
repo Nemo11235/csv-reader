@@ -2,10 +2,29 @@ import React, { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 
 function FileDropZone({ onFileDrop }) {
+  function CSVToArray(csvData) {
+    const rows = csvData.split("\n");
+    const result = [];
+    rows.forEach(function (row) {
+      result.push(row.split(","));
+    });
+    return result;
+  }
+
   const onDrop = useCallback(
     (acceptedFiles) => {
-      // 如果定义了onFileDrop回调函数，则调用它并传递接收的文件列表
-      onFileDrop("hahaa");
+      const reader = new FileReader();
+      // 处理文件读取完成事件
+      reader.onload = function (event) {
+        // 读取到的文件数据在 event.target.result 中
+        const fileData = event.target.result;
+        // 使用 csv-parser 解析 CSV 数据
+        const csvArray = CSVToArray(fileData);
+        // 调用回调函数，并将解析后的二维数组传递给它
+        onFileDrop(csvArray);
+      };
+      // 读取文件内容
+      reader.readAsText(acceptedFiles[0]);
     },
     [onFileDrop]
   );
