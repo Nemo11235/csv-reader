@@ -5,7 +5,8 @@ import React, { useState, useCallback } from "react";
 function App() {
   const [response, setResponse] = useState([]);
   const [problemRows, setProblemRows] = useState([]);
-  const [problemCols, setProblemCols] = useState([]);
+  const [set, setSet] = useState(new Set());
+  set.add(0);
 
   const handleFileDrop = useCallback((result) => {
     setResponse(result);
@@ -31,7 +32,6 @@ function App() {
       .filter((row, index, array) => validRow(row, index, array, "2:30", 2, 2))
       .map((row) => row);
 
-    const today = response[response.length - 2][0].split(" ")[0];
     const moistColumns = [];
     for (let i = 0; i < response[0].length; i++) {
       if (response[0][i].includes("Mois")) {
@@ -62,13 +62,10 @@ function App() {
             rows1230[i + 10],
             rows1230[i + 20],
           ]);
-          console.log(moistColumns[j] + "has problem");
-          setProblemCols([...problemCols, moistColumns[j]]);
+          set.add(moistColumns[j]);
         }
       }
     }
-    console.log(problemCols);
-    console.log(problemRows);
   };
 
   return (
@@ -130,16 +127,20 @@ function App() {
         <tbody>
           {problemRows.length > 0 && (
             <tr>
-              {response[0].map((column, columnIndex) => (
-                <th key={columnIndex}>{column}</th>
-              ))}
+              {response[0].map((column, columnIndex) =>
+                set.has(columnIndex) ? (
+                  <th key={columnIndex}>{column}</th>
+                ) : null
+              )}
             </tr>
           )}
           {problemRows.map((row, rowIndex) => (
             <tr key={rowIndex}>
-              {row.map((column, columnIndex) => (
-                <td key={columnIndex}>{column}</td>
-              ))}
+              {row.map((column, columnIndex) =>
+                set.has(columnIndex) ? (
+                  <td key={columnIndex}>{column}</td>
+                ) : null
+              )}
             </tr>
           ))}
         </tbody>
