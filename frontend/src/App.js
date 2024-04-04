@@ -45,22 +45,30 @@ function App() {
         const second = Number(rows1230[i + 10][moistColumns[j]]);
         const third = Number(rows1230[i + 20][moistColumns[j]]);
         const avgDiff = Math.abs(((first + second) / 2 - third).toFixed(2));
-        // console.log(
-        //   "first = " +
-        //     first +
-        //     ",second: " +
-        //     second +
-        //     ",third = " +
-        //     third +
-        //     ",avgDiff = " +
-        //     avgDiff
-        // );
         if (avgDiff > 1) {
           setProblemRows([
             ...problemRows,
             rows1230[i],
             rows1230[i + 10],
             rows1230[i + 20],
+          ]);
+          set.add(moistColumns[j]);
+        }
+      }
+    }
+
+    for (let i = 0; i < 5; i++) {
+      for (let j = 0; j < moistColumns.length; j++) {
+        const first = Number(rows230[i][moistColumns[j]]);
+        const second = Number(rows230[i + 10][moistColumns[j]]);
+        const third = Number(rows230[i + 20][moistColumns[j]]);
+        const avgDiff = Math.abs(((first + second) / 2 - third).toFixed(2));
+        if (avgDiff > 1) {
+          setProblemRows([
+            ...problemRows,
+            rows230[i],
+            rows230[i + 10],
+            rows230[i + 20],
           ]);
           set.add(moistColumns[j]);
         }
