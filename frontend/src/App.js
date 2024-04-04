@@ -5,13 +5,21 @@ import React, { useState, useCallback } from "react";
 function App() {
   const [response, setResponse] = useState([]);
   const [problemRows, setProblemRows] = useState([]);
+  const [problemRows2, setProblemRows2] = useState([]);
   const [set, setSet] = useState(new Set());
+  const [set2, setSet2] = useState(new Set());
+  set2.add(0);
   set.add(0);
+
+  function clearAll() {
+    setSet(new Set());
+    setSet2(new Set());
+    setProblemRows([]);
+    setProblemRows2([]);
+  }
 
   const handleFileDrop = useCallback((result) => {
     setResponse(result);
-
-    // 在这里可以处理接收到的文件列表，或者将信息传递到主页面的其他组件
   }, []);
 
   function validRow(row, index, array, keyString, upper, lower) {
@@ -24,28 +32,36 @@ function App() {
   }
 
   const onAnalyze = () => {
+    // clearAll();
+    const allowedMoistDiff = 1;
+
     const rows1230 = response
       .filter((row, index, array) => validRow(row, index, array, "12:30", 2, 2))
       .map((row) => row);
 
     const rows230 = response
-      .filter((row, index, array) => validRow(row, index, array, "2:30", 2, 2))
+      .filter((row, index, array) => validRow(row, index, array, "02:30", 2, 2))
       .map((row) => row);
 
     const moistColumns = [];
+    const ecColumns = [];
+
     for (let i = 0; i < response[0].length; i++) {
       if (response[0][i].includes("Mois")) {
         moistColumns.push(i);
+      } else {
+        ecColumns.push(i);
       }
     }
 
+    // 5 对应12:10 - 12:50共五个时间点
     for (let i = 0; i < 5; i++) {
       for (let j = 0; j < moistColumns.length; j++) {
         const first = Number(rows1230[i][moistColumns[j]]);
         const second = Number(rows1230[i + 10][moistColumns[j]]);
         const third = Number(rows1230[i + 20][moistColumns[j]]);
         const avgDiff = Math.abs(((first + second) / 2 - third).toFixed(2));
-        if (avgDiff > 1) {
+        if (avgDiff > allowedMoistDiff) {
           setProblemRows([
             ...problemRows,
             rows1230[i],
@@ -56,21 +72,36 @@ function App() {
         }
       }
     }
-
+    // 分析2:30
     for (let i = 0; i < 5; i++) {
       for (let j = 0; j < moistColumns.length; j++) {
         const first = Number(rows230[i][moistColumns[j]]);
         const second = Number(rows230[i + 10][moistColumns[j]]);
         const third = Number(rows230[i + 20][moistColumns[j]]);
         const avgDiff = Math.abs(((first + second) / 2 - third).toFixed(2));
-        if (avgDiff > 1) {
-          setProblemRows([
-            ...problemRows,
+        if (avgDiff > allowedMoistDiff) {
+          console.log(
+            rows230[i][0] +
+              " " +
+              rows230[i + 10][0] +
+              " " +
+              rows230[i + 20][0] +
+              "first: " +
+              first +
+              " second: " +
+              second +
+              " third: " +
+              third +
+              " diff: " +
+              avgDiff
+          );
+          setProblemRows2([
+            ...problemRows2,
             rows230[i],
             rows230[i + 10],
             rows230[i + 20],
           ]);
-          set.add(moistColumns[j]);
+          set2.add(moistColumns[j]);
         }
       }
     }
@@ -117,7 +148,7 @@ function App() {
           )}
           {response
             .filter((row, index, array) =>
-              validRow(row, index, array, "2:30", 2, 2)
+              validRow(row, index, array, "02:30", 2, 2)
             )
             .map((row, rowIndex) => (
               <tr key={rowIndex}>
@@ -129,7 +160,7 @@ function App() {
         </tbody>
       </table>
 
-      <h1>Problem Rows: </h1>
+      <h1>Moisture Problem Rows: </h1>
 
       <table className="data-table">
         <tbody>
@@ -146,6 +177,31 @@ function App() {
             <tr key={rowIndex}>
               {row.map((column, columnIndex) =>
                 set.has(columnIndex) ? (
+                  <td key={columnIndex}>{column}</td>
+                ) : null
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <h1>EC Problem Rows: </h1>
+
+      <table className="data-table">
+        <tbody>
+          {problemRows2.length > 0 && (
+            <tr>
+              {response[0].map((column, columnIndex) =>
+                set2.has(columnIndex) ? (
+                  <th key={columnIndex}>{column}</th>
+                ) : null
+              )}
+            </tr>
+          )}
+          {problemRows2.map((row, rowIndex) => (
+            <tr key={rowIndex}>
+              {row.map((column, columnIndex) =>
+                set2.has(columnIndex) ? (
                   <td key={columnIndex}>{column}</td>
                 ) : null
               )}
