@@ -17,3 +17,20 @@
 .data-table tr:nth-child(even) {
   background-color: #f2f2f2;
 }
+
+.console-div {
+  display: flex;
+  flex-direction: row;
+}
+
+.analyze-btn {
+  margin: 10px;
+  height: 50px;
+  width: 200px;
+}
+
+.moist-input {
+  margin: 10px;
+  height: 30px;
+  width: 200px;
+}
