@@ -3,22 +3,26 @@ import "./App.scss";
 import React, { useState, useCallback } from "react";
 
 function App() {
-  const [response, setResponse] = useState([]);
-  const [problemRows, setProblemRows] = useState([]);
-  const [problemRows2, setProblemRows2] = useState([]);
-  const [set, setSet] = useState(new Set());
-  const [set2, setSet2] = useState(new Set());
-  set2.add(0);
-  set.add(0);
+  const [response, setResponse] = useState([]); // store user input data
+  const [moistBadRows, setMoistBadRows] = useState([]); // rows not meeting moisture requirements around 12:30 am/pm
+  const [moistBadRows2, setMoistBadRows2] = useState([]); // rows not meeting moisture requirements around 2:30 am/pm
+  const [validMoistDiff, setMoistDiff] = useState(1); // allowed moist diff +-
+  const [validECDiff, setECDiff] = useState(1); // allowed ec diff +-
+  const [showData, setShowData] = useState(true); // show data read from file or not
+  const [set, setSet] = useState(new Set()); // columns indices that doesn't meet moisture requirements around 12:30 am/pm
+  const [set2, setSet2] = useState(new Set()); // columns indices that doesn't meet moisture requirements around 2:30 am/pm
+  set2.add(0); // must show first col timestamp
+  set.add(0); // must show first col timestamp
 
   function clearAll() {
     setSet(new Set());
     setSet2(new Set());
-    setProblemRows([]);
-    setProblemRows2([]);
+    setMoistBadRows([]);
+    setMoistBadRows2([]);
   }
 
   const handleFileDrop = useCallback((result) => {
+    clearAll();
     setResponse(result);
   }, []);
 
@@ -29,6 +33,10 @@ function App() {
         return true;
     }
     return false;
+  }
+
+  function avg(a, b) {
+    return (a + b) / 2;
   }
 
   const onAnalyze = () => {
@@ -53,17 +61,16 @@ function App() {
         ecColumns.push(i);
       }
     }
-
     // 5 对应12:10 - 12:50共五个时间点
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 10; i++) {
       for (let j = 0; j < moistColumns.length; j++) {
-        const first = Number(rows1230[i][moistColumns[j]]);
-        const second = Number(rows1230[i + 10][moistColumns[j]]);
-        const third = Number(rows1230[i + 20][moistColumns[j]]);
-        const avgDiff = Math.abs(((first + second) / 2 - third).toFixed(2));
+        const first = parseInt(rows1230[i][moistColumns[j]]);
+        const second = parseInt(rows1230[i + 10][moistColumns[j]]);
+        const third = parseInt(rows1230[i + 20][moistColumns[j]]);
+        const avgDiff = Math.abs(avg(first, second) - third);
         if (avgDiff > allowedMoistDiff) {
-          setProblemRows([
-            ...problemRows,
+          setMoistBadRows([
+            ...moistBadRows,
             rows1230[i],
             rows1230[i + 10],
             rows1230[i + 20],
@@ -73,30 +80,15 @@ function App() {
       }
     }
     // 分析2:30
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 10; i++) {
       for (let j = 0; j < moistColumns.length; j++) {
-        const first = Number(rows230[i][moistColumns[j]]);
-        const second = Number(rows230[i + 10][moistColumns[j]]);
-        const third = Number(rows230[i + 20][moistColumns[j]]);
-        const avgDiff = Math.abs(((first + second) / 2 - third).toFixed(2));
+        const first = parseInt(rows230[i][moistColumns[j]]);
+        const second = parseInt(rows230[i + 10][moistColumns[j]]);
+        const third = parseInt(rows230[i + 20][moistColumns[j]]);
+        const avgDiff = Math.abs(avg(first, second) - third);
         if (avgDiff > allowedMoistDiff) {
-          console.log(
-            rows230[i][0] +
-              " " +
-              rows230[i + 10][0] +
-              " " +
-              rows230[i + 20][0] +
-              "first: " +
-              first +
-              " second: " +
-              second +
-              " third: " +
-              third +
-              " diff: " +
-              avgDiff
-          );
-          setProblemRows2([
-            ...problemRows2,
+          setMoistBadRows2([
+            ...moistBadRows2,
             rows230[i],
             rows230[i + 10],
             rows230[i + 20],
@@ -160,11 +152,11 @@ function App() {
         </tbody>
       </table>
 
-      <h1>Moisture Problem Rows: </h1>
+      <h1>Moisture 12:30 Problem Rows: </h1>
 
       <table className="data-table">
         <tbody>
-          {problemRows.length > 0 && (
+          {moistBadRows.length > 0 && (
             <tr>
               {response[0].map((column, columnIndex) =>
                 set.has(columnIndex) ? (
@@ -173,7 +165,7 @@ function App() {
               )}
             </tr>
           )}
-          {problemRows.map((row, rowIndex) => (
+          {moistBadRows.map((row, rowIndex) => (
             <tr key={rowIndex}>
               {row.map((column, columnIndex) =>
                 set.has(columnIndex) ? (
@@ -185,11 +177,11 @@ function App() {
         </tbody>
       </table>
 
-      <h1>EC Problem Rows: </h1>
+      <h1>Moisture 2:30 Problem Rows: </h1>
 
       <table className="data-table">
         <tbody>
-          {problemRows2.length > 0 && (
+          {moistBadRows2.length > 0 && (
             <tr>
               {response[0].map((column, columnIndex) =>
                 set2.has(columnIndex) ? (
@@ -198,7 +190,7 @@ function App() {
               )}
             </tr>
           )}
-          {problemRows2.map((row, rowIndex) => (
+          {moistBadRows2.map((row, rowIndex) => (
             <tr key={rowIndex}>
               {row.map((column, columnIndex) =>
                 set2.has(columnIndex) ? (
