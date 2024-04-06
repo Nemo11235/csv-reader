@@ -12,7 +12,7 @@ function App() {
   const [setEc2, setSetEc2] = useState(new Set()); // columns indices that doesn't meet ec requirements around 2:30 am/pm
 
   const [validMoistDiff, setMoistDiff] = useState(1); // allowed moist diff +-
-  const [validEcDrop, setEcDrop] = useState(1); // allowed ec diff +-
+  const [validEcDrop, setEcDrop] = useState(0.5); // allowed ec diff +-
   const [showData, setShowData] = useState(true); // show data read from file or not
   const [set, setSet] = useState(new Set()); // columns indices that doesn't meet moisture requirements around 12:30 am/pm
   const [set2, setSet2] = useState(new Set()); // columns indices that doesn't meet moisture requirements around 2:30 am/pm
@@ -146,7 +146,7 @@ function App() {
             first,
             second,
             third,
-            avgDiff,
+            -avgDiff,
           ]);
           setEcBadRows([
             ...ecBadRows,
@@ -173,7 +173,7 @@ function App() {
             first,
             second,
             third,
-            avgDiff,
+            -avgDiff,
           ]);
           setEcBadRows2([
             ...ecBadRows2,
