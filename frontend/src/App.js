@@ -12,16 +12,19 @@ function App() {
   const [setEc2, setSetEc2] = useState(new Set()); // columns indices that doesn't meet ec requirements around 2:30 am/pm
 
   const [validMoistDiff, setMoistDiff] = useState(1); // allowed moist diff +-
-  const [validEcDiff, setEcDiff] = useState(-1); // allowed ec diff +-
+  const [validEcDrop, setEcDrop] = useState(1); // allowed ec diff +-
   const [showData, setShowData] = useState(true); // show data read from file or not
   const [set, setSet] = useState(new Set()); // columns indices that doesn't meet moisture requirements around 12:30 am/pm
   const [set2, setSet2] = useState(new Set()); // columns indices that doesn't meet moisture requirements around 2:30 am/pm
-  setEc.add(0);
-  setEc.add(0);
-  set2.add(0); // must show first col timestamp
-  set.add(0); // must show first col timestamp
+  const [badCells, setBadCells] = useState(new Set());
+
+  // setEc.add(0);
+  // setEc2.add(0);
+  // set2.add(0); // must show first col timestamp
+  // set.add(0); // must show first col timestamp
 
   function clearAll() {
+    setBadCells(new Set());
     setSet(new Set());
     setSet2(new Set());
     setSetEc(new Set());
@@ -70,32 +73,54 @@ function App() {
       }
     }
     // 5 对应12:10 - 12:50共五个时间点
+    let rowAdded = false;
     for (let i = 0; i < 10; i++) {
+      rowAdded = false;
       for (let j = 0; j < moistColumns.length; j++) {
-        const first = parseInt(rows1230[i][moistColumns[j]]);
-        const second = parseInt(rows1230[i + 10][moistColumns[j]]);
-        const third = parseInt(rows1230[i + 20][moistColumns[j]]);
-        const avgDiff = Math.abs(avg(first, second) - third);
+        let first = parseFloat(rows1230[i][moistColumns[j]]);
+        let second = parseFloat(rows1230[i + 10][moistColumns[j]]);
+        let third = parseFloat(rows1230[i + 20][moistColumns[j]]);
+        let avgDiff = Math.abs(avg(first, second) - third).toFixed(2);
         if (avgDiff > validMoistDiff) {
-          setMoistBadRows([
-            ...moistBadRows,
-            rows1230[i],
-            rows1230[i + 10],
-            rows1230[i + 20],
+          // 时间戳，测量仪名称，数据
+          badCells.add([
+            rows1230[i + 20][0],
+            response[0][moistColumns[j]],
+            first,
+            second,
+            third,
+            avgDiff,
           ]);
-          set.add(moistColumns[j]);
+          if (!rowAdded) {
+            rowAdded = true;
+            setMoistBadRows((prev) => [
+              ...prev,
+              rows1230[i],
+              rows1230[i + 10],
+              rows1230[i + 20],
+            ]);
+          }
         }
       }
     }
 
     // 分析2:30
     for (let i = 0; i < 10; i++) {
+      rowAdded = false;
       for (let j = 0; j < moistColumns.length; j++) {
-        const first = parseInt(rows230[i][moistColumns[j]]);
-        const second = parseInt(rows230[i + 10][moistColumns[j]]);
-        const third = parseInt(rows230[i + 20][moistColumns[j]]);
-        const avgDiff = avg(first, second) - third;
-        if (avgDiff > validEcDiff) {
+        const first = parseFloat(rows230[i][moistColumns[j]]);
+        const second = parseFloat(rows230[i + 10][moistColumns[j]]);
+        const third = parseFloat(rows230[i + 20][moistColumns[j]]);
+        const avgDiff = Math.abs(avg(first, second) - third).toFixed(2);
+        if (avgDiff > validMoistDiff) {
+          badCells.add([
+            rows230[i + 20][0],
+            response[0][moistColumns[j]],
+            first,
+            second,
+            third,
+            avgDiff,
+          ]);
           setMoistBadRows2([
             ...moistBadRows2,
             rows230[i],
@@ -110,11 +135,19 @@ function App() {
     // 分析ec 12:30ec
     for (let i = 0; i < 10; i++) {
       for (let j = 0; j < ecColumns.length; j++) {
-        const first = parseInt(rows1230[i][ecColumns[j]]);
-        const second = parseInt(rows1230[i + 10][ecColumns[j]]);
-        const third = parseInt(rows1230[i + 20][ecColumns[j]]);
-        const avgDiff = avg(first, second) - third;
-        if (avgDiff > validEcDiff) {
+        const first = parseFloat(rows1230[i][ecColumns[j]]);
+        const second = parseFloat(rows1230[i + 10][ecColumns[j]]);
+        const third = parseFloat(rows1230[i + 20][ecColumns[j]]);
+        const avgDiff = (avg(first, second) - third).toFixed(2);
+        if (avgDiff > validEcDrop) {
+          badCells.add([
+            rows1230[i + 20][0],
+            response[0][ecColumns[j]],
+            first,
+            second,
+            third,
+            avgDiff,
+          ]);
           setEcBadRows([
             ...ecBadRows,
             rows1230[i],
@@ -129,11 +162,19 @@ function App() {
     // ec 2:30
     for (let i = 0; i < 10; i++) {
       for (let j = 0; j < ecColumns.length; j++) {
-        const first = parseInt(rows230[i][ecColumns[j]]);
-        const second = parseInt(rows230[i + 10][ecColumns[j]]);
-        const third = parseInt(rows230[i + 20][ecColumns[j]]);
-        const avgDiff = Math.abs(avg(first, second) - third);
-        if (avgDiff < validEcDiff) {
+        const first = parseFloat(rows230[i][ecColumns[j]]);
+        const second = parseFloat(rows230[i + 10][ecColumns[j]]);
+        const third = parseFloat(rows230[i + 20][ecColumns[j]]);
+        const avgDiff = (avg(first, second) - third).toFixed(2);
+        if (avgDiff > validEcDrop) {
+          badCells.add([
+            rows230[i + 20][0],
+            response[0][ecColumns[j]],
+            first,
+            second,
+            third,
+            avgDiff,
+          ]);
           setEcBadRows2([
             ...ecBadRows2,
             rows230[i],
@@ -144,8 +185,6 @@ function App() {
         }
       }
     }
-
-    console.log(moistBadRows);
   };
 
   const onShowData = () => {
@@ -154,7 +193,7 @@ function App() {
 
   const [moistInput, setMoistInput] = useState(1);
   const onMoistChangeClick = (event) => {
-    setMoistInput(parseInt(event.target.value));
+    setMoistInput(parseFloat(event.target.value));
   };
 
   const handleChangeMoistDiff = () => {
@@ -163,11 +202,11 @@ function App() {
 
   const [ecInput, setEcInput] = useState(1);
   const onEcChangeClick = (event) => {
-    setEcInput(parseInt(event.target.value));
+    setEcInput(parseFloat(event.target.value));
   };
 
   const handleChangeEcDiff = () => {
-    setEcDiff(ecInput);
+    setEcDrop(ecInput);
   };
 
   return (
@@ -264,7 +303,29 @@ function App() {
           </table>
         </div>
       )}
-      <h1>早晚12:30湿度误差过大的行数： </h1>
+      <table className="data-table">
+        <thead>
+          <tr>
+            <th>时间戳</th>
+            <th>探测器编号</th>
+            <th>第一天数据</th>
+            <th>第二天数据</th>
+            <th>第三天数据</th>
+            <th>差值</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from(badCells).map((array, index) => (
+            <tr key={index}>
+              {array.map((item, subIndex) => (
+                <td key={subIndex}>{item}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* <h1>早晚12:30湿度误差过大的行数： </h1>
 
       <table className="data-table">
         <tbody>
@@ -360,7 +421,7 @@ function App() {
             </tr>
           ))}
         </tbody>
-      </table>
+      </table> */}
     </div>
   );
 }
