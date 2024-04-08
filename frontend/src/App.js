@@ -6,6 +6,7 @@ function App() {
   const [response, setResponse] = useState([]); // store user input data
   const [rowSets, setRowSets] = useState(new Set());
   const [validMoistDiff, setMoistDiff] = useState(1); // allowed moist diff +-
+  const [hideZero, setHideZero] = useState(false);
   const [validEcDrop, setEcDrop] = useState(0.5); // allowed ec diff +-
   const [showData, setShowData] = useState(true); // show data read from file or not
   const [badCells, setBadCells] = useState(new Set());
@@ -59,20 +60,32 @@ function App() {
         let second = parseFloat(rows1230[i + 10][moistColumns[j]]);
         let third = parseFloat(rows1230[i + 20][moistColumns[j]]);
         let avgDiff = Math.abs(avg(first, second) - third).toFixed(2);
+        let dataArr = [
+          rows1230[i + 20][0],
+          response[0][moistColumns[j]],
+          first,
+          second,
+          third,
+          avgDiff,
+        ];
+        if (hideZero && (first === 0 || second === 0 || third === 0)) continue;
         if (
           avgDiff > validMoistDiff &&
           !rowSets.has(response[0][moistColumns[j]])
         ) {
           // 时间戳，测量仪名称，数据
-          badCells.add([
-            rows1230[i + 20][0],
-            response[0][moistColumns[j]],
-            first,
-            second,
-            third,
-            avgDiff,
-          ]);
+          badCells.add(dataArr);
           rowSets.add(response[0][moistColumns[j]]);
+        } else {
+          badCells.forEach((array) => {
+            if (
+              array.includes(response[0][moistColumns[j]]) &&
+              array[5] < avgDiff
+            ) {
+              badCells.delete(array);
+              badCells.add(dataArr);
+            }
+          });
         }
       }
     }
@@ -84,6 +97,7 @@ function App() {
         const second = parseFloat(rows230[i + 10][moistColumns[j]]);
         const third = parseFloat(rows230[i + 20][moistColumns[j]]);
         const avgDiff = Math.abs(avg(first, second) - third).toFixed(2);
+        if (hideZero && (first === 0 || second === 0 || third === 0)) continue;
         if (
           avgDiff > validMoistDiff &&
           !rowSets.has(response[0][moistColumns[j]])
@@ -164,6 +178,10 @@ function App() {
     setEcDrop(ecInput);
   };
 
+  const onHideZeroClick = () => {
+    setHideZero(!hideZero);
+  };
+
   return (
     <div className="App">
       <header className="App-header"></header>
@@ -204,6 +222,15 @@ function App() {
               修改EC误差值
             </button>
           </div>
+          {hideZero ? (
+            <button style={{ marginLeft: "10px" }} onClick={onHideZeroClick}>
+              忽略带有0的数据行（点击后需清空数据再点分析以使其生效）
+            </button>
+          ) : (
+            <button style={{ marginLeft: "10px" }} onClick={onHideZeroClick}>
+              保留带有0的数据行（点击后需清空数据再点分析以使其生效）
+            </button>
+          )}
         </div>
       </div>
       {showData && (
