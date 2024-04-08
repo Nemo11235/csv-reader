@@ -224,11 +224,11 @@ function App() {
           </div>
           {hideZero ? (
             <button style={{ marginLeft: "10px" }} onClick={onHideZeroClick}>
-              忽略带有0的数据行（点击后需清空数据再点分析以使其生效）
+              保留带有0的数据行（点击后需清空数据再点分析以使其生效）
             </button>
           ) : (
             <button style={{ marginLeft: "10px" }} onClick={onHideZeroClick}>
-              保留带有0的数据行（点击后需清空数据再点分析以使其生效）
+              忽略带有0的数据行（点击后需清空数据再点分析以使其生效）
             </button>
           )}
         </div>
