@@ -69,23 +69,22 @@ function App() {
           avgDiff,
         ];
         if (hideZero && (first === 0 || second === 0 || third === 0)) continue;
-        if (
-          avgDiff > validMoistDiff &&
-          !rowSets.has(response[0][moistColumns[j]])
-        ) {
+        if (avgDiff > validMoistDiff) {
           // 时间戳，测量仪名称，数据
-          badCells.add(dataArr);
-          rowSets.add(response[0][moistColumns[j]]);
-        } else {
-          badCells.forEach((array) => {
-            if (
-              array.includes(response[0][moistColumns[j]]) &&
-              array[5] < avgDiff
-            ) {
-              badCells.delete(array);
-              badCells.add(dataArr);
-            }
-          });
+          if (!rowSets.has(response[0][moistColumns[j]])) {
+            rowSets.add(response[0][moistColumns[j]]);
+            badCells.add(dataArr);
+          } else {
+            badCells.forEach((array) => {
+              if (
+                array.includes(response[0][moistColumns[j]]) &&
+                array[5] < avgDiff
+              ) {
+                badCells.delete(array);
+                badCells.add(dataArr);
+              }
+            });
+          }
         }
       }
     }
@@ -97,20 +96,23 @@ function App() {
         const second = parseFloat(rows230[i + 10][moistColumns[j]]);
         const third = parseFloat(rows230[i + 20][moistColumns[j]]);
         const avgDiff = Math.abs(avg(first, second) - third).toFixed(2);
+        let dataArr = [
+          rows230[i + 20][0],
+          response[0][moistColumns[j]],
+          first,
+          second,
+          third,
+          avgDiff,
+        ];
         if (hideZero && (first === 0 || second === 0 || third === 0)) continue;
-        if (
-          avgDiff > validMoistDiff &&
-          !rowSets.has(response[0][moistColumns[j]])
-        ) {
-          badCells.add([
-            rows230[i + 20][0],
-            response[0][moistColumns[j]],
-            first,
-            second,
-            third,
-            avgDiff,
-          ]);
-          rowSets.add(response[0][moistColumns[j]]);
+        if (avgDiff > validMoistDiff) {
+          if (avgDiff > validMoistDiff) {
+            // 时间戳，测量仪名称，数据
+            if (!rowSets.has(response[0][moistColumns[j]])) {
+              rowSets.add(response[0][moistColumns[j]]);
+              badCells.add(dataArr);
+            }
+          }
         }
       }
     }
