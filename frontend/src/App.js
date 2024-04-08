@@ -4,35 +4,15 @@ import React, { useState, useCallback } from "react";
 
 function App() {
   const [response, setResponse] = useState([]); // store user input data
-  const [moistBadRows, setMoistBadRows] = useState([]); // rows not meeting moisture requirements around 12:30 am/pm
-  const [moistBadRows2, setMoistBadRows2] = useState([]); // rows not meeting moisture requirements around 2:30 am/pm
-  const [ecBadRows, setEcBadRows] = useState([]);
-  const [ecBadRows2, setEcBadRows2] = useState([]);
-  const [setEc, setSetEc] = useState(new Set()); // columns indices that doesn't meet ec requirements around 12:30 am/pm
-  const [setEc2, setSetEc2] = useState(new Set()); // columns indices that doesn't meet ec requirements around 2:30 am/pm
-
+  const [rowSets, setRowSets] = useState(new Set());
   const [validMoistDiff, setMoistDiff] = useState(1); // allowed moist diff +-
   const [validEcDrop, setEcDrop] = useState(0.5); // allowed ec diff +-
   const [showData, setShowData] = useState(true); // show data read from file or not
-  const [set, setSet] = useState(new Set()); // columns indices that doesn't meet moisture requirements around 12:30 am/pm
-  const [set2, setSet2] = useState(new Set()); // columns indices that doesn't meet moisture requirements around 2:30 am/pm
   const [badCells, setBadCells] = useState(new Set());
-
-  // setEc.add(0);
-  // setEc2.add(0);
-  // set2.add(0); // must show first col timestamp
-  // set.add(0); // must show first col timestamp
 
   function clearAll() {
     setBadCells(new Set());
-    setSet(new Set());
-    setSet2(new Set());
-    setSetEc(new Set());
-    setSetEc2(new Set());
-    setEcBadRows([]);
-    setEcBadRows2([]);
-    setMoistBadRows([]);
-    setMoistBadRows2([]);
+    setRowSets(new Set());
   }
 
   const handleFileDrop = useCallback((result) => {
@@ -73,15 +53,16 @@ function App() {
       }
     }
     // 5 对应12:10 - 12:50共五个时间点
-    let rowAdded = false;
     for (let i = 0; i < 10; i++) {
-      rowAdded = false;
       for (let j = 0; j < moistColumns.length; j++) {
         let first = parseFloat(rows1230[i][moistColumns[j]]);
         let second = parseFloat(rows1230[i + 10][moistColumns[j]]);
         let third = parseFloat(rows1230[i + 20][moistColumns[j]]);
         let avgDiff = Math.abs(avg(first, second) - third).toFixed(2);
-        if (avgDiff > validMoistDiff) {
+        if (
+          avgDiff > validMoistDiff &&
+          !rowSets.has(response[0][moistColumns[j]])
+        ) {
           // 时间戳，测量仪名称，数据
           badCells.add([
             rows1230[i + 20][0],
@@ -91,28 +72,22 @@ function App() {
             third,
             avgDiff,
           ]);
-          if (!rowAdded) {
-            rowAdded = true;
-            setMoistBadRows((prev) => [
-              ...prev,
-              rows1230[i],
-              rows1230[i + 10],
-              rows1230[i + 20],
-            ]);
-          }
+          rowSets.add(response[0][moistColumns[j]]);
         }
       }
     }
 
     // 分析2:30
     for (let i = 0; i < 10; i++) {
-      rowAdded = false;
       for (let j = 0; j < moistColumns.length; j++) {
         const first = parseFloat(rows230[i][moistColumns[j]]);
         const second = parseFloat(rows230[i + 10][moistColumns[j]]);
         const third = parseFloat(rows230[i + 20][moistColumns[j]]);
         const avgDiff = Math.abs(avg(first, second) - third).toFixed(2);
-        if (avgDiff > validMoistDiff) {
+        if (
+          avgDiff > validMoistDiff &&
+          !rowSets.has(response[0][moistColumns[j]])
+        ) {
           badCells.add([
             rows230[i + 20][0],
             response[0][moistColumns[j]],
@@ -121,70 +96,50 @@ function App() {
             third,
             avgDiff,
           ]);
-          setMoistBadRows2([
-            ...moistBadRows2,
-            rows230[i],
-            rows230[i + 10],
-            rows230[i + 20],
-          ]);
-          set2.add(moistColumns[j]);
+          rowSets.add(response[0][moistColumns[j]]);
         }
       }
     }
 
-    // 分析ec 12:30ec
-    for (let i = 0; i < 10; i++) {
-      for (let j = 0; j < ecColumns.length; j++) {
-        const first = parseFloat(rows1230[i][ecColumns[j]]);
-        const second = parseFloat(rows1230[i + 10][ecColumns[j]]);
-        const third = parseFloat(rows1230[i + 20][ecColumns[j]]);
-        const avgDiff = (avg(first, second) - third).toFixed(2);
-        if (avgDiff > validEcDrop) {
-          badCells.add([
-            rows1230[i + 20][0],
-            response[0][ecColumns[j]],
-            first,
-            second,
-            third,
-            -avgDiff,
-          ]);
-          setEcBadRows([
-            ...ecBadRows,
-            rows1230[i],
-            rows1230[i + 10],
-            rows1230[i + 20],
-          ]);
-          setEc.add(ecColumns[j]);
-        }
-      }
-    }
+    // // 分析ec 12:30ec
+    // for (let i = 0; i < 10; i++) {
+    //   for (let j = 0; j < ecColumns.length; j++) {
+    //     const first = parseFloat(rows1230[i][ecColumns[j]]);
+    //     const second = parseFloat(rows1230[i + 10][ecColumns[j]]);
+    //     const third = parseFloat(rows1230[i + 20][ecColumns[j]]);
+    //     const avgDiff = (avg(first, second) - third).toFixed(2);
+    //     if (avgDiff > validEcDrop) {
+    //       badCells.add([
+    //         rows1230[i + 20][0],
+    //         response[0][ecColumns[j]],
+    //         first,
+    //         second,
+    //         third,
+    //         -avgDiff,
+    //       ]);
+    //     }
+    //   }
+    // }
 
-    // ec 2:30
-    for (let i = 0; i < 10; i++) {
-      for (let j = 0; j < ecColumns.length; j++) {
-        const first = parseFloat(rows230[i][ecColumns[j]]);
-        const second = parseFloat(rows230[i + 10][ecColumns[j]]);
-        const third = parseFloat(rows230[i + 20][ecColumns[j]]);
-        const avgDiff = (avg(first, second) - third).toFixed(2);
-        if (avgDiff > validEcDrop) {
-          badCells.add([
-            rows230[i + 20][0],
-            response[0][ecColumns[j]],
-            first,
-            second,
-            third,
-            -avgDiff,
-          ]);
-          setEcBadRows2([
-            ...ecBadRows2,
-            rows230[i],
-            rows230[i + 10],
-            rows230[i + 20],
-          ]);
-          setEc2.add(ecColumns[j]);
-        }
-      }
-    }
+    // // ec 2:30
+    // for (let i = 0; i < 10; i++) {
+    //   for (let j = 0; j < ecColumns.length; j++) {
+    //     const first = parseFloat(rows230[i][ecColumns[j]]);
+    //     const second = parseFloat(rows230[i + 10][ecColumns[j]]);
+    //     const third = parseFloat(rows230[i + 20][ecColumns[j]]);
+    //     const avgDiff = (avg(first, second) - third).toFixed(2);
+    //     if (avgDiff > validEcDrop) {
+    //       badCells.add([
+    //         rows230[i + 20][0],
+    //         response[0][ecColumns[j]],
+    //         first,
+    //         second,
+    //         third,
+    //         -avgDiff,
+    //       ]);
+    //     }
+    //   }
+    // }
   };
 
   const onShowData = () => {
