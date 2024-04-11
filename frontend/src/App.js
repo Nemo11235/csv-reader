@@ -66,9 +66,9 @@ function App() {
 
         let dataArr = [
           response[0][moistColumns[j]],
-          date1[0] + ": " + first,
-          date2[0] + ": " + second,
-          date3[0] + ": " + third,
+          date1[0] + " " + date1[1] + ": " + first,
+          date2[0] + " " + date1[1] + ": " + second,
+          date3[0] + " " + date1[1] + ": " + third,
           avgDiff,
         ];
         if (hideZero && (first === 0 || second === 0 || third === 0)) continue;
