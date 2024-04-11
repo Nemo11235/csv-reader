@@ -59,17 +59,20 @@ function App() {
         let first = parseFloat(rows1230[i][moistColumns[j]]);
         let second = parseFloat(rows1230[i + 10][moistColumns[j]]);
         let third = parseFloat(rows1230[i + 20][moistColumns[j]]);
-        let avgDiff = Math.abs(avg(first, second) - third).toFixed(2);
+        let avgDiff = (third - avg(first, second)).toFixed(2);
+        let date1 = rows1230[i][0].split(" ");
+        let date2 = rows1230[i + 10][0].split(" ");
+        let date3 = rows1230[i + 20][0].split(" ");
+
         let dataArr = [
-          rows1230[i + 20][0],
           response[0][moistColumns[j]],
-          first,
-          second,
-          third,
+          date1[0] + ": " + first,
+          date2[0] + ": " + second,
+          date3[0] + ": " + third,
           avgDiff,
         ];
         if (hideZero && (first === 0 || second === 0 || third === 0)) continue;
-        if (avgDiff > validMoistDiff) {
+        if (Math.abs(avgDiff) > validMoistDiff) {
           // 时间戳，测量仪名称，数据
           if (!rowSets.has(response[0][moistColumns[j]])) {
             rowSets.add(response[0][moistColumns[j]]);
@@ -78,7 +81,7 @@ function App() {
             badCells.forEach((array) => {
               if (
                 array.includes(response[0][moistColumns[j]]) &&
-                array[5] < avgDiff
+                array[4] < avgDiff
               ) {
                 badCells.delete(array);
                 badCells.add(dataArr);
@@ -95,22 +98,34 @@ function App() {
         const first = parseFloat(rows230[i][moistColumns[j]]);
         const second = parseFloat(rows230[i + 10][moistColumns[j]]);
         const third = parseFloat(rows230[i + 20][moistColumns[j]]);
-        const avgDiff = Math.abs(avg(first, second) - third).toFixed(2);
+        const avgDiff = (avg(first, second) - third).toFixed(2);
+        let date1 = rows1230[i][0].split(" ");
+        let date2 = rows1230[i + 10][0].split(" ");
+        let date3 = rows1230[i + 20][0].split(" ");
         let dataArr = [
-          rows230[i + 20][0],
           response[0][moistColumns[j]],
-          first,
-          second,
-          third,
+          date1[0] + ": " + first,
+          date2[0] + ": " + second,
+          date3[0] + ": " + third,
           avgDiff,
         ];
         if (hideZero && (first === 0 || second === 0 || third === 0)) continue;
         if (avgDiff > validMoistDiff) {
-          if (avgDiff > validMoistDiff) {
+          if (Math.abs(avgDiff) > validMoistDiff) {
             // 时间戳，测量仪名称，数据
             if (!rowSets.has(response[0][moistColumns[j]])) {
               rowSets.add(response[0][moistColumns[j]]);
               badCells.add(dataArr);
+            } else {
+              badCells.forEach((array) => {
+                if (
+                  array.includes(response[0][moistColumns[j]]) &&
+                  array[4] < avgDiff
+                ) {
+                  badCells.delete(array);
+                  badCells.add(dataArr);
+                }
+              });
             }
           }
         }
@@ -290,7 +305,6 @@ function App() {
       <table className="data-table">
         <thead>
           <tr>
-            <th>时间戳</th>
             <th>探测器编号</th>
             <th>第一天数据</th>
             <th>第二天数据</th>
