@@ -226,7 +226,7 @@ function App() {
               onChange={onMoistChangeClick}
               placeholder="此处输入湿度的正负误差值"
             ></input>
-            <button className="" onClick={handleChangeMoistDiff}>
+            <button className="analyze-btn" onClick={handleChangeMoistDiff}>
               修改湿度误差值
             </button>
             <input
@@ -235,7 +235,7 @@ function App() {
               onChange={onEcChangeClick}
               placeholder="此处输入EC的正负误差值"
             ></input>
-            <button className="" onClick={handleChangeEcDiff}>
+            <button className="analyze-btn" onClick={handleChangeEcDiff}>
               修改EC误差值
             </button>
           </div>

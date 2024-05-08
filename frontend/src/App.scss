@@ -24,10 +24,24 @@
   flex-direction: row;
 }
 
-.analyze-btn {
+button {
   margin: 10px;
   height: 50px;
   width: 200px;
+  border: none;
+  background-color: #4287f5;
+  box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.3);
+  font-size: 70%;
+  font-weight: 700;
+}
+
+button:hover {
+  scale: 1.01;
+}
+
+button:active {
+  background-color: #166af2;
+  color: white;
 }
 
 .moist-input {
