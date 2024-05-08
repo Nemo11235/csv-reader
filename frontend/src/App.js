@@ -1,6 +1,8 @@
 import FileDropZone from "./FileDropZone";
 import "./App.scss";
 import React, { useState, useCallback } from "react";
+import { LanguageProvider } from "./LanguageContext";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 function App() {
   const [response, setResponse] = useState([]); // store user input data
@@ -200,130 +202,132 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <header className="App-header"></header>
-      <div className="console-div">
-        <FileDropZone onFileDrop={handleFileDrop} />
-        <div
-          className="right-div"
-          style={{ display: "flex", flexDirection: "column" }}
-        >
-          <div className="btn-div">
-            <button className="analyze-btn" onClick={onAnalyze}>
-              分析
-            </button>
-            <button className="analyze-btn" onClick={onShowData}>
-              {showData ? "隐藏完整数据" : "显示完整数据"}
-            </button>
-            <button className="analyze-btn" onClick={() => clearAll()}>
-              清空数据
-            </button>
+    <LanguageProvider>
+      <div className="App">
+        <LanguageSwitcher />
+        <header className="App-header"></header>
+        <div className="console-div">
+          <FileDropZone onFileDrop={handleFileDrop} />
+          <div
+            className="right-div"
+            style={{ display: "flex", flexDirection: "column" }}
+          >
+            <div className="btn-div">
+              <button className="analyze-btn" onClick={onAnalyze}>
+                分析
+              </button>
+              <button className="analyze-btn" onClick={onShowData}>
+                {showData ? "隐藏完整数据" : "显示完整数据"}
+              </button>
+              <button className="analyze-btn" onClick={() => clearAll()}>
+                清空数据
+              </button>
+            </div>
+            <div className="set-range-div">
+              <input
+                className="moist-input"
+                type="int"
+                onChange={onMoistChangeClick}
+                placeholder="此处输入湿度的正负误差值"
+              ></input>
+              <button className="analyze-btn" onClick={handleChangeMoistDiff}>
+                修改湿度误差值
+              </button>
+              <input
+                className="moist-input"
+                type="int"
+                onChange={onEcChangeClick}
+                placeholder="此处输入EC的正负误差值"
+              ></input>
+              <button className="analyze-btn" onClick={handleChangeEcDiff}>
+                修改EC误差值
+              </button>
+            </div>
+            {hideZero ? (
+              <button style={{ marginLeft: "10px" }} onClick={onHideZeroClick}>
+                保留带有0的数据行（点击后需清空数据再点分析以使其生效）
+              </button>
+            ) : (
+              <button style={{ marginLeft: "10px" }} onClick={onHideZeroClick}>
+                忽略带有0的数据行（点击后需清空数据再点分析以使其生效）
+              </button>
+            )}
           </div>
-          <div className="set-range-div">
-            <input
-              className="moist-input"
-              type="int"
-              onChange={onMoistChangeClick}
-              placeholder="此处输入湿度的正负误差值"
-            ></input>
-            <button className="analyze-btn" onClick={handleChangeMoistDiff}>
-              修改湿度误差值
-            </button>
-            <input
-              className="moist-input"
-              type="int"
-              onChange={onEcChangeClick}
-              placeholder="此处输入EC的正负误差值"
-            ></input>
-            <button className="analyze-btn" onClick={handleChangeEcDiff}>
-              修改EC误差值
-            </button>
-          </div>
-          {hideZero ? (
-            <button style={{ marginLeft: "10px" }} onClick={onHideZeroClick}>
-              保留带有0的数据行（点击后需清空数据再点分析以使其生效）
-            </button>
-          ) : (
-            <button style={{ marginLeft: "10px" }} onClick={onHideZeroClick}>
-              忽略带有0的数据行（点击后需清空数据再点分析以使其生效）
-            </button>
-          )}
         </div>
-      </div>
-      {showData && (
-        <div className="data-div">
-          <h1>早晚12:10 - 12:50数据：</h1>
+        {showData && (
+          <div className="data-div">
+            <h1>早晚12:10 - 12:50数据：</h1>
 
-          <table className="data-table">
-            <tbody>
-              {response.length > 0 && (
-                <tr>
-                  {response[0].map((column, columnIndex) => (
-                    <th key={columnIndex}>{column}</th>
-                  ))}
-                </tr>
-              )}
-              {response
-                .filter((row, index, array) =>
-                  validRow(row, index, array, "12:30", 2, 2)
-                )
-                .map((row, rowIndex) => (
-                  <tr key={rowIndex}>
-                    {row.map((column, columnIndex) => (
-                      <td key={columnIndex}>{column}</td>
+            <table className="data-table">
+              <tbody>
+                {response.length > 0 && (
+                  <tr>
+                    {response[0].map((column, columnIndex) => (
+                      <th key={columnIndex}>{column}</th>
                     ))}
                   </tr>
-                ))}
-            </tbody>
-          </table>
-
-          <h1>早晚2:10 - 2:50数据：</h1>
-          <table className="data-table">
-            <tbody>
-              {response.length > 0 && (
-                <tr>
-                  {response[0].map((column, columnIndex) => (
-                    <th key={columnIndex}>{column}</th>
+                )}
+                {response
+                  .filter((row, index, array) =>
+                    validRow(row, index, array, "12:30", 2, 2)
+                  )
+                  .map((row, rowIndex) => (
+                    <tr key={rowIndex}>
+                      {row.map((column, columnIndex) => (
+                        <td key={columnIndex}>{column}</td>
+                      ))}
+                    </tr>
                   ))}
-                </tr>
-              )}
-              {response
-                .filter((row, index, array) =>
-                  validRow(row, index, array, "02:30", 2, 2)
-                )
-                .map((row, rowIndex) => (
-                  <tr key={rowIndex}>
-                    {row.map((column, columnIndex) => (
-                      <td key={columnIndex}>{column}</td>
+              </tbody>
+            </table>
+
+            <h1>早晚2:10 - 2:50数据：</h1>
+            <table className="data-table">
+              <tbody>
+                {response.length > 0 && (
+                  <tr>
+                    {response[0].map((column, columnIndex) => (
+                      <th key={columnIndex}>{column}</th>
                     ))}
                   </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>探测器编号</th>
-            <th>第一天数据</th>
-            <th>第二天数据</th>
-            <th>第三天数据</th>
-            <th>差值</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Array.from(badCells).map((array, index) => (
-            <tr key={index}>
-              {array.map((item, subIndex) => (
-                <td key={subIndex}>{item}</td>
-              ))}
+                )}
+                {response
+                  .filter((row, index, array) =>
+                    validRow(row, index, array, "02:30", 2, 2)
+                  )
+                  .map((row, rowIndex) => (
+                    <tr key={rowIndex}>
+                      {row.map((column, columnIndex) => (
+                        <td key={columnIndex}>{column}</td>
+                      ))}
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>探测器编号</th>
+              <th>第一天数据</th>
+              <th>第二天数据</th>
+              <th>第三天数据</th>
+              <th>差值</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {Array.from(badCells).map((array, index) => (
+              <tr key={index}>
+                {array.map((item, subIndex) => (
+                  <td key={subIndex}>{item}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-      {/* <h1>早晚12:30湿度误差过大的行数： </h1>
+        {/* <h1>早晚12:30湿度误差过大的行数： </h1>
 
       <table className="data-table">
         <tbody>
@@ -420,7 +424,8 @@ function App() {
           ))}
         </tbody>
       </table> */}
-    </div>
+      </div>
+    </LanguageProvider>
   );
 }
 
